@@ -21,8 +21,29 @@ const Home: NextPage = () => {
 
   const submitQuestion = async (e: any) => {
     e.preventDefault();
-    // Add your logic for submitting the question here
-  };
+    setLoading(true);
+  
+    try {
+      // Replace this with your API call or logic to generate the answer
+      const response = await fetch('/api/your-api-endpoint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to generate answer');
+      }
+  
+      const data = await response.json();
+      setGeneratedBios(data.answer);
+    } catch (error) {
+      toast.error('Error generating answer');
+    } finally {
+      setLoading(false);
+      scrollToBios();
+    }
+  };  
 
   return (
     <div className="flex max-w-5xl mx-auto flex-col items-center justify-center py-2 min-h-screen">

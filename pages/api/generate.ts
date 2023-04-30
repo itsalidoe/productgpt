@@ -8,14 +8,21 @@ export const config = {
   runtime: "edge",
 };
 
+const createPrompt = (user_question: string, preprocessed_data: string): string => {
+  return `User question: ${user_question}\nPreprocessed Trello data:\n${preprocessed_data}\nAnswer: `;
+};
+
 const handler = async (req: Request): Promise<Response> => {
-  const { prompt } = (await req.json()) as {
-    prompt?: string;
+  const { user_question, preprocessed_data } = (await req.json()) as {
+    user_question?: string;
+    preprocessed_data?: string;
   };
 
-  if (!prompt) {
-    return new Response("No prompt in the request", { status: 400 });
+  if (!user_question || !preprocessed_data) {
+    return new Response("No user_question or preprocessed_data in the request", { status: 400 });
   }
+
+  const prompt = createPrompt(user_question, preprocessed_data);
 
   const payload: OpenAIStreamPayload = {
     model: "gpt-4",

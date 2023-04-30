@@ -79,13 +79,13 @@ const Home: NextPage = () => {
           <div className="text-left font-medium mb-2">Presets:</div>
           <div className="mb-5">
             <button
-              onClick={() => setQuestion("When will this project be done?")}
+              onClick={() => setQuestion("What are all the lists on this board?")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
               What are all the lists on this board?
             </button>
             <button
-              onClick={() => setQuestion("What are all the lists on this board?")}
+              onClick={() => setQuestion("How many cards are in the To Do list?")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
               How many cards are in the "To Do" list?
@@ -94,16 +94,16 @@ const Home: NextPage = () => {
               onClick={() => setQuestion("What is the status of the project?")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
-             Show me all the cards assigned to me.
+             What is the status of the project?
             </button>
             <button
-              onClick={() => setQuestion("What is the status of the project?")}
+              onClick={() => setQuestion("Are there any overdue tasks?")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
              Are there any overdue tasks?
             </button>
             <button
-              onClick={() => setQuestion("What is the status of the project?")}
+              onClick={() => setQuestion("Show me all the cards with the 'bug' label.")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
              Show me all the cards with the 'bug' label.

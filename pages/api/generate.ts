@@ -13,17 +13,20 @@ const createPrompt = (user_question: string, preprocessed_data: string): string 
 };
 
 const handler = async (req: Request): Promise<Response> => {
+
+
+
   const { user_question, preprocessed_data } = (await req.json()) as {
     user_question?: string;
-    preprocessed_data?: string;
+    preprocessed_data?: any;
   };
 
   if (!user_question || !preprocessed_data) {
     return new Response("No user_question or preprocessed_data in the request", { status: 400 });
   }
 
-  const prompt = createPrompt(user_question, preprocessed_data);
-
+  const prompt = createPrompt(user_question, JSON.stringify(preprocessed_data));
+  console.log(prompt)
   const payload: OpenAIStreamPayload = {
     model: "gpt-4",
     messages: [{ role: "user", content: prompt }],

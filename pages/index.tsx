@@ -8,7 +8,7 @@ import LoadingDots from "../components/LoadingDots";
 
 const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
-  const [question, setQuestion] = useState('');
+  const [question, setQuestion] = useState("");
   const [generatedBios, setGeneratedBios] = useState("");
 
   const bioRef = useRef<null | HTMLDivElement>(null);
@@ -22,37 +22,62 @@ const Home: NextPage = () => {
   const submitQuestion = async (e: any) => {
     e.preventDefault();
     setLoading(true);
-  
+    setGeneratedBios("");
+
     try {
       // Replace this with your API call or logic to generate the answer
-      const preProcessedData = await fetch('/api/trello/board/644ea17c62d66c926139f10f', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization':'Bearer ATTAfebcadf0fc59c8b271089c4af32ec32a36b2f870bfaf2d007f6e6f060f8ac8ab58941A65' },
-      });
-      console.log(preProcessedData.json());
+      const preProcessedData = await fetch(
+        "/api/trello/board/644ea17c62d66c926139f10f",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization:
+              "Bearer ATTAfebcadf0fc59c8b271089c4af32ec32a36b2f870bfaf2d007f6e6f060f8ac8ab58941A65",
+          },
+        }
+      );
 
-      const preprocessed_data = await preProcessedData.json();
-
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_question:question, preprocessed_data: preprocessed_data }),
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_question: question,
+          preprocessed_data: await preProcessedData.json(),
+        }),
       });
-  
-  
+
       if (!response.ok) {
-        throw new Error('Failed to generate answer');
+        throw new Error("Failed to generate answer");
       }
-  
-      const data = await response.json();
-      setGeneratedBios(data.answer);
+
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+
+      // This data is a ReadableStream
+      const data = response.body;
+      if (!data) {
+        return;
+      }
+
+      const reader = data.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value);
+        setGeneratedBios((prev) => prev + chunkValue);
+      }
     } catch (error) {
-      toast.error('Error generating answer');
+      toast.error("Error generating answer");
     } finally {
       setLoading(false);
       scrollToBios();
     }
-  };  
+  };
 
   return (
     <div className="flex max-w-5xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
@@ -100,23 +125,23 @@ const Home: NextPage = () => {
               onClick={() => setQuestion("Are there any overdue tasks?")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
-             Are there any overdue tasks?
+              Are there any overdue tasks?
             </button>
             <button
               onClick={() => setQuestion("Show me all the cards with the 'bug' label.")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
-             Show me all the cards with the 'bug' label.
+              Show me all the cards with the 'bug' label.
             </button>
             {/* Add more preset question buttons as needed */}
           </div>
           {!loading && (
-           <button
-           className="bg-black rounded-xl text-white font-medium px-4 py-2 sm:mt-10 mt-8 hover:bg-black/80 w-full"
-           onClick={(e) => submitQuestion(e)}
-         >
-           Submit Question &rarr;
-         </button>
+            <button
+              className="bg-black rounded-xl text-white font-medium px-4 py-2 sm:mt-10 mt-8 hover:bg-black/80 w-full"
+              onClick={(e) => submitQuestion(e)}
+            >
+              Submit Question &rarr;
+            </button>
           )}
           {loading && (
             <button
@@ -147,25 +172,17 @@ const Home: NextPage = () => {
               </h2>
             </div>
             <div className="space-y-8 flex flex-col items-center justify-center max-w-xl mx-auto">
-              {generatedBios
-                .substring(generatedBios.indexOf("1") + 3)
-                .split("2.")
-                .map((generatedBio) => {
-                  return (
-                    <div
-                      className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-100 transition cursor-copy border"
-                      onClick={() => {
-                        navigator.clipboard.writeText(generatedBio);
-                        toast("Bio copied to clipboard", {
-                          icon: "✂️",
-                        });
-                      }}
-                      key={generatedBio}
-                    >
-                      <p>{generatedBio}</p>
-                    </div>
-                  );
-                })}
+              <div
+                className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-100 transition cursor-copy border"
+                // onClick={() => {
+                //   navigator.clipboard.writeText(generatedBios);
+                //   toast("Bio copied to clipboard", {
+                //     icon: "✂️",
+                //   });
+                // }}
+              >
+                <p>{generatedBios}</p>
+              </div>
             </div>
           </>
         )}

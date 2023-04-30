@@ -9,7 +9,7 @@ export const config = {
 };
 
 const createPrompt = (user_question: string, preprocessed_data: string): string => {
-  return `User question: ${user_question}\nPreprocessed Trello data:\n${preprocessed_data}\nAnswer: `;
+  return `User question: ${user_question}\nPreprocessed Trello data:\n${preprocessed_data}\nPlease provide the answer in Markdown format.\nAnswer: `;
 };
 
 const handler = async (req: Request): Promise<Response> => {

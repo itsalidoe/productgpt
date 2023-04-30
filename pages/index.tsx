@@ -1,6 +1,7 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import { useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { Toaster, toast } from "react-hot-toast";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
@@ -188,7 +189,7 @@ const Home: NextPage = () => {
                 //   });
                 // }}
               >
-                <p>{generatedBios}</p>
+                <ReactMarkdown>{generatedBios}</ReactMarkdown>
               </div>
             </div>
           </>

@@ -25,11 +25,20 @@ const Home: NextPage = () => {
   
     try {
       // Replace this with your API call or logic to generate the answer
-      const response = await fetch('/api/your-api-endpoint', {
+      const preProcessedData = await fetch('/api/trello/board/644ea17c62d66c926139f10f', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization':'Bearer ATTAfebcadf0fc59c8b271089c4af32ec32a36b2f870bfaf2d007f6e6f060f8ac8ab58941A65' },
+      });
+      console.log(preProcessedData.json());
+
+      const preprocessed_data = await preProcessedData.json();
+
+      const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ user_question:question, preprocessed_data: preprocessed_data }),
       });
+  
   
       if (!response.ok) {
         throw new Error('Failed to generate answer');
@@ -76,7 +85,7 @@ const Home: NextPage = () => {
               What are all the lists on this board?
             </button>
             <button
-              onClick={() => setQuestion("What is the status of the project?")}
+              onClick={() => setQuestion("What are all the lists on this board?")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
               How many cards are in the "To Do" list?

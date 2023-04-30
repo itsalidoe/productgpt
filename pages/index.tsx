@@ -27,7 +27,7 @@ const Home: NextPage = () => {
   return (
     <div className="flex max-w-5xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
       <Head>
-        <title>Twitter</title>
+        <title>Talk to Trello</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -52,13 +52,31 @@ const Home: NextPage = () => {
               onClick={() => setQuestion("When will this project be done?")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
-              When will this project be done?
+              What are all the lists on this board?
             </button>
             <button
               onClick={() => setQuestion("What is the status of the project?")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
-              What is the status of the project?
+              How many cards are in the "To Do" list?
+            </button>
+            <button
+              onClick={() => setQuestion("What is the status of the project?")}
+              className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
+            >
+             Show me all the cards assigned to me.
+            </button>
+            <button
+              onClick={() => setQuestion("What is the status of the project?")}
+              className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
+            >
+             Are there any overdue tasks?
+            </button>
+            <button
+              onClick={() => setQuestion("What is the status of the project?")}
+              className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
+            >
+             Show me all the cards with the 'bug' label.
             </button>
             {/* Add more preset question buttons as needed */}
           </div>
@@ -95,7 +113,7 @@ const Home: NextPage = () => {
                 className="sm:text-4xl text-3xl font-bold text-slate-900 mx-auto"
                 ref={bioRef}
               >
-                Your generated bios
+                Answer:
               </h2>
             </div>
             <div className="space-y-8 flex flex-col items-center justify-center max-w-xl mx-auto">

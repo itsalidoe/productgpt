@@ -5,11 +5,15 @@ import { Toaster, toast } from "react-hot-toast";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import LoadingDots from "../components/LoadingDots";
+import WelcomeScreen from "../components/WelcomeScreen";
+
 
 const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState("");
   const [generatedBios, setGeneratedBios] = useState("");
+  const [showWelcome, setShowWelcome] = useState(true);
+
 
   const bioRef = useRef<null | HTMLDivElement>(null);
 
@@ -85,6 +89,9 @@ const Home: NextPage = () => {
         <title>Talk to Trello</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
+
+      {showWelcome && <WelcomeScreen setShowWelcome={setShowWelcome} />}
+
 
       <Header />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20">

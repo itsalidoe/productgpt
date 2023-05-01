@@ -1,8 +1,10 @@
 import type { NextPage } from "next";
+import { useRouter } from "next/router";
 import Head from "next/head";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { Toaster, toast } from "react-hot-toast";
+import Cookies from "js-cookie";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import LoadingDots from "../components/LoadingDots";
@@ -13,8 +15,29 @@ const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState("");
   const [generatedBios, setGeneratedBios] = useState("");
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
 
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const authToken = Cookies.get('auth-token');
+      if (!authToken) {
+        setShowWelcome(true);
+      }
+    }
+  }, []);
+
+  // Set our trello auth cookie if we have a token in the URL
+  if (typeof window !== "undefined") {
+    const authToken = router.asPath.split("=")[1];
+    if (authToken) {
+      Cookies.set('auth-token', authToken, {
+        secure: process.env.NODE_ENV === 'production', // encrypt and HTTPS only if in production
+        sameSite: 'strict', // CSRF protection
+      })
+    }
+  }
 
   const bioRef = useRef<null | HTMLDivElement>(null);
 
@@ -30,7 +53,14 @@ const Home: NextPage = () => {
     setGeneratedBios("");
 
     try {
-      // Replace this with your API call or logic to generate the answer
+      if (question === "") {
+        throw new Error("Question cannot be empty");
+      }
+
+      if (!Cookies.get('auth-token')) {
+        throw new Error("Not authenticated");
+      }
+
       const preProcessedData = await fetch(
         "/api/trello/board/644ea17c62d66c926139f10f",
         {
@@ -38,7 +68,7 @@ const Home: NextPage = () => {
           headers: {
             "Content-Type": "application/json",
             Authorization:
-              "Bearer ATTAfebcadf0fc59c8b271089c4af32ec32a36b2f870bfaf2d007f6e6f060f8ac8ab58941A65",
+              `Bearer ${Cookies.get('auth-token')}`,
           },
         }
       );
@@ -77,7 +107,7 @@ const Home: NextPage = () => {
         setGeneratedBios((prev) => prev + chunkValue);
       }
     } catch (error) {
-      toast.error("Error generating answer");
+      toast.error(`Error generating answer: ${error}`);
     } finally {
       setLoading(false);
       scrollToBios();

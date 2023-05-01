@@ -3,7 +3,7 @@ import React from 'react';
 const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void }> = ({ setShowWelcome }) => {
   const handleClose = () => {
     setShowWelcome(false);
-    window.location.href = 'https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&key=4001343302f0450d29e3da0388ddc711';
+    window.location.href = 'https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&key=2763e28ba1be71c85d97cf5206872560&return_url=http://localhost:3000';
   };
 
   const handleCloseButton = () => {

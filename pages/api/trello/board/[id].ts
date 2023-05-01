@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-if (!process.env.TRELLO_API_KEY && !process.env.TRELLO_API_TOKEN) {
+if (!process.env.NEXT_PUBLIC_TRELLO_API_KEY && !process.env.TRELLO_API_TOKEN) {
   throw new Error("Missing env var from Trello");
 }
 
@@ -8,9 +8,8 @@ export default async function GetTrelloBoard(
   req: NextApiRequest,
   res: NextApiResponse<any>
 ) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  console.log(req.cookies)
+  if (!req.cookies['auth-token']) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -18,19 +17,20 @@ export default async function GetTrelloBoard(
     return res.status(400).json({ message: "Missing board id" });
   }
 
-  const accessToken = authHeader.split(" ")[1];
+  const accessToken = req.cookies['auth-token'];
+  console.log(accessToken)
   const id = req.query.id;
   console.log(id);
 
   try {
     const boardMetadata = await fetch(
-      `https://api.trello.com/1/boards/${id}?key=${process.env.TRELLO_API_KEY}&token=${accessToken}`
+      `https://api.trello.com/1/boards/${id}?key=${process.env.NEXT_PUBLIC_TRELLO_API_KEY}&token=${accessToken}`
     );
     const boardLists = await fetch(
-      `https://api.trello.com/1/boards/${id}/lists?key=${process.env.TRELLO_API_KEY}&token=${accessToken}`
+      `https://api.trello.com/1/boards/${id}/lists?key=${process.env.NEXT_PUBLIC_TRELLO_API_KEY}&token=${accessToken}`
     );
     const boardCards = await fetch(
-      `https://api.trello.com/1/boards/${id}/cards?key=${process.env.TRELLO_API_KEY}&token=${accessToken}`
+      `https://api.trello.com/1/boards/${id}/cards?key=${process.env.NEXT_PUBLIC_TRELLO_API_KEY}&token=${accessToken}`
     );
 
     const cards = await boardCards.json()

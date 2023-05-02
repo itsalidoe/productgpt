@@ -34,9 +34,9 @@ const Home: NextPage = () => {
     }
   }, []);
 
-  const fetchBoards = async () => {
+  const fetchBoards = async (organizationId) => {
     try {
-      const response = await fetch("/api/trello/boards", {
+      const response = await fetch(`/api/trello/boards?organizationId=${organizationId}`, {
         headers: {
           Authorization: `Bearer ${Cookies.get("auth-token")}`,
         },
@@ -152,7 +152,7 @@ const Home: NextPage = () => {
         />
       )}
 
-<Header onLogout={handleLogout} />
+<Header onLogout={handleLogout} fetchBoards={fetchBoards} />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20">
         <h1 className="sm:text-6xl text-4xl max-w-[708px] font-bold text-slate-900">
           Talk to your Trello Board

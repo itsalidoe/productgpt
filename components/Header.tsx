@@ -5,9 +5,11 @@ import { useRouter } from 'next/router';
 
 interface HeaderProps {
   onLogout?: () => void;
+  fetchBoards: (organizationId: string) => void;
 }
 
-export default function Header({ onLogout }: HeaderProps) {
+
+export default function Header({ onLogout, fetchBoards }: HeaderProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [workspaces, setWorkspaces] = useState([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState(null);
@@ -37,9 +39,22 @@ export default function Header({ onLogout }: HeaderProps) {
   const selectWorkspace = (workspace) => {
     setSelectedWorkspace(workspace);
     console.log('Selected workspace:', workspace);
+    fetchBoards(workspace.id); // Fetch boards for the selected workspace
+
     // Perform any additional actions needed when selecting a workspace
   };
 
+  const fetchUserBoards = async () => {
+    const response = await fetch('/api/trello/user/boards');
+    const data = await response.json();
+  
+    if (response.ok) {
+      console.log('User Boards:', data.result);
+      // Store the fetched user boards in the state or perform any additional actions needed
+    } else {
+      console.error('Error fetching user boards:', data.message);
+    }
+  };
 
   return (
     <header className="flex justify-between items-center py-4 px-8">
@@ -66,13 +81,17 @@ export default function Header({ onLogout }: HeaderProps) {
         {showDropdown && (
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
             <button onClick={handleSwitchWorkspace} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-              Fetch Workspaces
+              Switch Workspaces
             </button>
             {workspaces.map((workspace, index) => (
               <button key={index} onClick={() => selectWorkspace(workspace)} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                 {workspace.name}
               </button>
             ))}
+            <button onClick={fetchUserBoards} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+  Show All Boards
+</button>
+
             <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
               Logout
             </button>

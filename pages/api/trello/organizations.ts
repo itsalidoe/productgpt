@@ -4,11 +4,7 @@ if (!process.env.TRELLO_API_KEY && !process.env.TRELLO_API_TOKEN) {
   throw new Error("Missing env var from Trello");
 }
 
-interface IBoards {
-  results: { id: string; nodeId: string; name: string; [key: string]: any };
-}
-
-export default async function GetTrelloBoards(
+export default async function GetTrelloOrganizations(
   req: NextApiRequest,
   res: NextApiResponse<any>
 ) {
@@ -21,13 +17,10 @@ export default async function GetTrelloBoards(
 
   try {
     const response = await fetch(
-      `https://api.trello.com/1/members/me/boards?key=${process.env.NEXT_PUBLIC_TRELLO_API_KEY}&token=${accessToken}`
+      `https://api.trello.com/1/members/me/organizations?key=${process.env.NEXT_PUBLIC_TRELLO_API_KEY}&token=${accessToken}`
     );
-    let boards: any = await response.json()
-    boards = boards.map((board: any) => {
-      return { id: board.id, nodeId: board.nodeId, name: board.name, url: board.url };
-    });
-    return res.status(200).json({ result: boards });
+    const organizations: any = await response.json()
+    return res.status(200).json({ result: organizations });
   } catch (error) {
     return res.status(500).json({ message: "Something went wrong on the API!", error: error });
   }

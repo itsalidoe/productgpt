@@ -51,7 +51,7 @@ export default async function GetTrelloBoard(
       });
   } catch (error) {
     return res
-      .status(401)
-      .json({ message: "Invalid or expired token", error: error });
+      .status(500)
+      .json({ message: "Something went wrong on the API!", error: error });
   }
 }

@@ -10,32 +10,55 @@ import Header from "../components/Header";
 import LoadingDots from "../components/LoadingDots";
 import WelcomeScreen from "../components/WelcomeScreen";
 
-
 const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState("");
   const [generatedBios, setGeneratedBios] = useState("");
   const [showWelcome, setShowWelcome] = useState(false);
+  const [selectedBoardId, setSelectedBoardId] = useState("");
+  const [boards, setBoards] = useState([]);
 
   const router = useRouter();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const authToken = Cookies.get('auth-token');
+      const authToken = Cookies.get("auth-token");
       if (!authToken) {
         setShowWelcome(true);
+      } else {
+        fetchBoards();
       }
     }
   }, []);
 
-  // Set our trello auth cookie if we have a token in the URL
+  const fetchBoards = async () => {
+    try {
+      const response = await fetch("/api/trello/boards", {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("auth-token")}`,
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch boards");
+      }
+  
+      const data = await response.json();
+      setBoards(data.result); // Access the 'result' key here
+      console.log(data.result); // Log the 'result' key as well
+    } catch (error) {
+      toast.error(`Error fetching boards: ${error}`);
+    }
+  };
+  
+
   if (typeof window !== "undefined") {
     const authToken = router.asPath.split("=")[1];
     if (authToken) {
-      Cookies.set('auth-token', authToken, {
-        secure: process.env.NODE_ENV === 'production', // encrypt and HTTPS only if in production
-        sameSite: 'strict', // CSRF protection
-      })
+      Cookies.set("auth-token", authToken, {
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
     }
   }
 
@@ -57,18 +80,17 @@ const Home: NextPage = () => {
         throw new Error("Question cannot be empty");
       }
 
-      if (!Cookies.get('auth-token')) {
+      if (!Cookies.get("auth-token")) {
         throw new Error("Not authenticated");
       }
 
       const preProcessedData = await fetch(
-        "/api/trello/board/644ea17c62d66c926139f10f",
+        `/api/trello/board/${selectedBoardId}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization:
-              `Bearer ${Cookies.get('auth-token')}`,
+            Authorization: `Bearer ${Cookies.get("auth-token")}`,
           },
         }
       );
@@ -90,7 +112,6 @@ const Home: NextPage = () => {
         throw new Error(response.statusText);
       }
 
-      // This data is a ReadableStream
       const data = response.body;
       if (!data) {
         return;
@@ -121,14 +142,32 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {showWelcome && <WelcomeScreen setShowWelcome={setShowWelcome} />}
-
+      {showWelcome && (
+        <WelcomeScreen
+          setShowWelcome={setShowWelcome}
+          setSelectedBoardId={setSelectedBoardId}
+        />
+      )}
 
       <Header />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20">
         <h1 className="sm:text-6xl text-4xl max-w-[708px] font-bold text-slate-900">
           Talk to your Trello Board
         </h1>
+        <select
+          value={selectedBoardId}
+          onChange={(e) => setSelectedBoardId(e.target.value)}
+          className="w-full mt-4 mb-8 bg-white border border-black rounded-md text-black font-medium px-4 py-2"
+        >
+          <option value="" disabled>
+            Select a Trello board
+          </option>
+          {boards.map((board) => (
+            <option key={board.id} value={board.id}>
+              {board.name}
+            </option>
+          ))}
+        </select>
         <div className="max-w-xl w-full">
           <div className="flex mt-10 items-center space-x-3">
             <input
@@ -212,12 +251,6 @@ const Home: NextPage = () => {
             <div className="space-y-8 flex flex-col items-center justify-center max-w-xl mx-auto">
               <div
                 className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-100 transition cursor-copy border"
-                // onClick={() => {
-                //   navigator.clipboard.writeText(generatedBios);
-                //   toast("Bio copied to clipboard", {
-                //     icon: "✂️",
-                //   });
-                // }}
               >
                 <ReactMarkdown>{generatedBios}</ReactMarkdown>
               </div>

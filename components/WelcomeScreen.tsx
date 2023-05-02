@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void }> = ({ setShowWelcome }) => {
+const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void; setSelectedBoardId: (id: string) => void }> = ({ setShowWelcome, setSelectedBoardId }) => {
   const [showModal, setShowModal] = useState(false);
   const [boards, setBoards] = useState([]);
 
@@ -30,7 +30,7 @@ const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void }> = ({ 
     setBoards(data);
   };
 
-  
+
   const fetchBoardData = async (boardId: string) => {
     try {
       const response = await fetch(`/api/trello/board/${boardId}`);
@@ -50,6 +50,7 @@ const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void }> = ({ 
   const handleBoardSelect = (id: string) => {
     fetchBoardData(id);
     setShowModal(false);
+    setSelectedBoardId(id);
   };
 
   return (

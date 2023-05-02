@@ -12,17 +12,16 @@ export default async function GetTrelloBoards(
   req: NextApiRequest,
   res: NextApiResponse<any>
 ) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  console.log(req.cookies)
+  if (!req.cookies['auth-token']) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const accessToken = authHeader.split(" ")[1];
+  const accessToken = req.cookies['auth-token'];
 
   try {
     const response = await fetch(
-      `https://api.trello.com/1/members/me/boards?key=${process.env.TRELLO_API_KEY}&token=${accessToken}`
+      `https://api.trello.com/1/members/me/boards?key=${process.env.NEXT_PUBLIC_TRELLO_API_KEY}&token=${accessToken}`
     );
     let boards: any = await response.json()
     boards = boards.map((board: any) => {

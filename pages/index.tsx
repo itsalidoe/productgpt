@@ -75,31 +75,31 @@ const Home: NextPage = () => {
           },
         }
       );
-
-      const preProcessedDataJSON = await preProcessedData.json()
+      const preProcessedDataJSON = await preProcessedData.json();
+      const body = JSON.stringify({
+        user_question: question,
+        preprocessed_data: preProcessedDataJSON,
+      })
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_question: question,
-          preprocessed_data: preProcessedDataJSON,
-        }),
+        body: body,
       });
 
       if (!response.ok) {
         throw new Error(response.statusText);
       }
-  
+
       // This data is a ReadableStream
       const data = response.body;
       if (!data) {
         return;
       }
-  
+
       const reader = data.getReader();
       const decoder = new TextDecoder();
       let done = false;
-  
+
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
@@ -132,7 +132,10 @@ const Home: NextPage = () => {
         />
       )}
 
-      <Header handleLogout={handleLogout} setOrganizationId={setOrganizationId} />
+      <Header
+        handleLogout={handleLogout}
+        setOrganizationId={setOrganizationId}
+      />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20">
         <h1 className="sm:text-6xl text-4xl max-w-[708px] font-bold text-slate-900">
           Talk to your Trello Board

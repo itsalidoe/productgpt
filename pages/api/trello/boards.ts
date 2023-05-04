@@ -12,7 +12,6 @@ export default async function GetTrelloBoards(
   req: NextApiRequest,
   res: NextApiResponse<any>
 ) {
-  console.log(req.cookies)
   if (!req.cookies['trello-token']) {
     return res.status(401).json({ message: "Unauthorized" });
   }

@@ -1,4 +1,3 @@
-import { NextApiRequest } from "next";
 import { OpenAIStream, OpenAIStreamPayload } from "../../utils/OpenAIStream";
 
 export const config = {
@@ -14,20 +13,21 @@ const createPrompt = (user_question: string, preprocessed_data: string): string 
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  const  { user_question, preprocessed_data }= req.body as any;
+
+  const { user_question, preprocessed_data }= await req.json() as any;
 
   if (!user_question) {
     return new Response("No prompt in the request", { status: 400 });
   }
 
   const payload: OpenAIStreamPayload = {
-    model: "gpt-4",
+    model: "gpt-3.5-turbo",
     messages: [{ role: "user", content: createPrompt(user_question, preprocessed_data) }],
-    temperature: 0.1,
+    temperature: 0.7,
     top_p: 1,
     frequency_penalty: 0,
     presence_penalty: 0,
-    max_tokens: 8000,
+    max_tokens: 200,
     stream: true,
     n: 1,
   };

@@ -8,7 +8,6 @@ export default async function GetTrelloOrganizations(
   req: NextApiRequest,
   res: NextApiResponse<any>
 ) {
-  console.log(req.cookies)
   if (!req.cookies['trello-token']) {
     return res.status(401).json({ message: "Unauthorized" });
   }

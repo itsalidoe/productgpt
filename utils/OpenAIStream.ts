@@ -38,8 +38,6 @@ export async function OpenAIStream(payload: OpenAIStreamPayload) {
     body: JSON.stringify(payload),
   });
 
-  console.log(res)
-
   const stream = new ReadableStream({
     async start(controller) {
       // callback

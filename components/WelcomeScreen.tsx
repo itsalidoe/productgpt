@@ -35,9 +35,7 @@ const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void; setSele
       const response = await fetch(`/api/trello/board/${boardId}`);
       const data = await response.json();
 
-      if (response.ok) {
-        console.log('Board data:', data);
-      } else {
+      if (!response.ok) {
         console.error('Error fetching board data:', data.message);
       }
     } catch (error) {

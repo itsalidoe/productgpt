@@ -8,7 +8,6 @@ export default async function GetTrelloBoard(
   req: NextApiRequest,
   res: NextApiResponse<any>
 ) {
-  console.log(req.cookies)
   if (!req.cookies['trello-token']) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -18,9 +17,7 @@ export default async function GetTrelloBoard(
   }
 
   const accessToken = req.cookies['trello-token'];
-  console.log(accessToken)
   const id = req.query.id;
-  console.log(id);
 
   try {
     const boardMetadata = await fetch(

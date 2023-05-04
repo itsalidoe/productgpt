@@ -21,7 +21,6 @@ export default function Header({ handleLogout, setOrganizationId }: HeaderProps)
     const data = await response.json();
 
     if (response.ok) {
-      console.log("Workspaces:", data.result);
       setWorkspaces(data.result); // Store the fetched workspaces in the state
     } else {
       console.error("Error fetching workspaces:", data.message);
@@ -30,7 +29,6 @@ export default function Header({ handleLogout, setOrganizationId }: HeaderProps)
 
   const selectWorkspace = (workspace: {name: string, id: string}) => {
     setSelectedWorkspace(workspace);
-    console.log("Selected workspace:", workspace);
     setOrganizationId(workspace.id); // Fetch boards for the selected workspace
 
     // Perform any additional actions needed when selecting a workspace
@@ -40,10 +38,7 @@ export default function Header({ handleLogout, setOrganizationId }: HeaderProps)
     const response = await fetch("/api/trello/boards");
     const data = await response.json();
 
-    if (response.ok) {
-      console.log("User Boards:", data.result);
-      // Store the fetched user boards in the state or perform any additional actions needed
-    } else {
+    if (!response.ok) {
       console.error("Error fetching user boards:", data.message);
     }
   };

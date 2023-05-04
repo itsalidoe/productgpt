@@ -6,7 +6,6 @@ import ReactMarkdown from "react-markdown";
 import { Toaster, toast } from "react-hot-toast";
 import Cookies from "js-cookie";
 import useSWR from "swr";
-import { signOut } from "next-auth/react";
 
 import { IModalContext, ModalContext } from "../context/ModalContext";
 import trelloFetcher from "../utils/fetchers/Trello";
@@ -24,14 +23,11 @@ const Home: NextPage = () => {
   const [question, setQuestion] = useState("");
   const [generatedBios, setGeneratedBios] = useState("");
   const [selectedBoardId, setSelectedBoardId] = useState("");
-  const [boards, setBoards] = useState([]);
   const [organizationId, setOrganizationId] = useState("");
-
-  const router = useRouter();
 
   const handleLogout = () => {
     setModalContext({ ...modalContext, welcome: true });
-    signOut({ redirect: false });
+    Cookies.remove("trello-token");
   };
 
   const {
@@ -39,40 +35,13 @@ const Home: NextPage = () => {
     error: fetchBoardsError,
     isLoading,
   } = useSWR(
-    Cookies.get("auth-token")
+    Cookies.get("trello-token")
       ? `/api/trello/boards?organizationId=${organizationId}`
       : null,
     trelloFetcher
   );
   if (fetchBoardsError)
     toast.error(`Error fetching boards: ${fetchBoardsError}`);
-
-  // const fetchBoards = async (organizationId?: string) => {
-
-  //     const response = await fetch(`/api/trello/boards?organizationId=${organizationId}`, {
-  //       headers: {
-  //         Authorization: `Bearer ${Cookies.get("auth-token")}`,
-  //       },
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to fetch boards");
-  //     }
-
-  //     const data: boards  = await response.json();
-  //     setBoards(data.result); // Access the 'result' key here
-  //     console.log(data.result); // Log the 'result' key as well
-  //   } catch (error) {
-  //     toast.error(`Error fetching boards: ${error}`);
-  //   }
-  // };
-
-  // if (typeof window !== "undefined") {
-  //   const authToken = router.asPath.split("=")[1];
-  //   if (authToken) {
-  //     Cookies.set("auth-token", authToken, );
-  //   }
-  // }
 
   const bioRef = useRef<null | HTMLDivElement>(null);
 
@@ -92,7 +61,7 @@ const Home: NextPage = () => {
         throw new Error("Question cannot be empty");
       }
 
-      if (!Cookies.get("auth-token")) {
+      if (!Cookies.get("trello-token")) {
         throw new Error("Not authenticated");
       }
 
@@ -102,7 +71,7 @@ const Home: NextPage = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${Cookies.get("auth-token")}`,
+            Authorization: `Bearer ${Cookies.get("trello-token")}`,
           },
         }
       );

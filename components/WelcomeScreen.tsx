@@ -15,7 +15,7 @@ const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void; setSele
   };
 
   const handleOpenModal = async () => {
-    const accessToken = Cookies.get('auth-token');
+    const accessToken = Cookies.get('trello-token');
 
     if (!accessToken) {
       console.error('Access token not found');

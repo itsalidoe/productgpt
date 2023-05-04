@@ -14,8 +14,6 @@ const createPrompt = (user_question: string, preprocessed_data: string): string 
 
 const handler = async (req: Request): Promise<Response> => {
 
-
-
   const { user_question, preprocessed_data } = (await req.json()) as {
     user_question?: string;
     preprocessed_data?: any;
@@ -35,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
     frequency_penalty: 0,
     presence_penalty: 0,
     max_tokens: 4000,
-    stream: true,
+    stream: false,
     n: 1,
   };
 

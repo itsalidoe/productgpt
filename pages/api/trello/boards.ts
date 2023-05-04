@@ -13,11 +13,11 @@ export default async function GetTrelloBoards(
   res: NextApiResponse<any>
 ) {
   console.log(req.cookies)
-  if (!req.cookies['auth-token']) {
+  if (!req.cookies['trello-token']) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const accessToken = req.cookies['auth-token'];
+  const accessToken = req.cookies['trello-token'];
   const { organizationId } = req.query;
 
 

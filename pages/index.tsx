@@ -1,69 +1,78 @@
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useContext } from "react";
 import ReactMarkdown from "react-markdown";
 import { Toaster, toast } from "react-hot-toast";
 import Cookies from "js-cookie";
+import useSWR from "swr";
+import { signOut } from "next-auth/react";
+
+import { IModalContext, ModalContext } from "../context/ModalContext";
+import trelloFetcher from "../utils/fetchers/Trello";
+
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import LoadingDots from "../components/LoadingDots";
 import WelcomeScreen from "../components/WelcomeScreen";
 
 const Home: NextPage = () => {
+  const { modalContext, setModalContext } = useContext(
+    ModalContext
+  ) as IModalContext;
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState("");
   const [generatedBios, setGeneratedBios] = useState("");
-  const [showWelcome, setShowWelcome] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState("");
   const [boards, setBoards] = useState([]);
-  const handleLogout = () => {
-    setShowWelcome(true);
-  };
+  const [organizationId, setOrganizationId] = useState("");
 
   const router = useRouter();
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const authToken = Cookies.get("auth-token");
-      if (!authToken) {
-        setShowWelcome(true);
-      } else {
-        fetchBoards();
-      }
-    }
-  }, []);
-
-  const fetchBoards = async (organizationId) => {
-    try {
-      const response = await fetch(`/api/trello/boards?organizationId=${organizationId}`, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("auth-token")}`,
-        },
-      });
-  
-      if (!response.ok) {
-        throw new Error("Failed to fetch boards");
-      }
-  
-      const data = await response.json();
-      setBoards(data.result); // Access the 'result' key here
-      console.log(data.result); // Log the 'result' key as well
-    } catch (error) {
-      toast.error(`Error fetching boards: ${error}`);
-    }
+  const handleLogout = () => {
+    setModalContext({ ...modalContext, welcome: true });
+    signOut({ redirect: false });
   };
-  
 
-  if (typeof window !== "undefined") {
-    const authToken = router.asPath.split("=")[1];
-    if (authToken) {
-      Cookies.set("auth-token", authToken, {
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
-    }
-  }
+  const {
+    data,
+    error: fetchBoardsError,
+    isLoading,
+  } = useSWR(
+    Cookies.get("auth-token")
+      ? `/api/trello/boards?organizationId=${organizationId}`
+      : null,
+    trelloFetcher
+  );
+  if (fetchBoardsError)
+    toast.error(`Error fetching boards: ${fetchBoardsError}`);
+
+  // const fetchBoards = async (organizationId?: string) => {
+
+  //     const response = await fetch(`/api/trello/boards?organizationId=${organizationId}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${Cookies.get("auth-token")}`,
+  //       },
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error("Failed to fetch boards");
+  //     }
+
+  //     const data: boards  = await response.json();
+  //     setBoards(data.result); // Access the 'result' key here
+  //     console.log(data.result); // Log the 'result' key as well
+  //   } catch (error) {
+  //     toast.error(`Error fetching boards: ${error}`);
+  //   }
+  // };
+
+  // if (typeof window !== "undefined") {
+  //   const authToken = router.asPath.split("=")[1];
+  //   if (authToken) {
+  //     Cookies.set("auth-token", authToken, );
+  //   }
+  // }
 
   const bioRef = useRef<null | HTMLDivElement>(null);
 
@@ -145,14 +154,16 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {showWelcome && (
+      {modalContext.welcome && (
         <WelcomeScreen
-          setShowWelcome={setShowWelcome}
+          setShowWelcome={() =>
+            setModalContext({ ...modalContext, welcome: !modalContext.welcome })
+          }
           setSelectedBoardId={setSelectedBoardId}
         />
       )}
 
-<Header onLogout={handleLogout} fetchBoards={fetchBoards} />
+      <Header handleLogout={handleLogout} setOrganizationId={setOrganizationId} />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20">
         <h1 className="sm:text-6xl text-4xl max-w-[708px] font-bold text-slate-900">
           Talk to your Trello Board
@@ -165,11 +176,12 @@ const Home: NextPage = () => {
           <option value="" disabled>
             Select a Trello board
           </option>
-          {boards.map((board) => (
-            <option key={board.id} value={board.id}>
-              {board.name}
-            </option>
-          ))}
+          {data?.result &&
+            data.result.map((board: { id: any; name: string }) => (
+              <option key={board.id} value={board.id}>
+                {board.name}
+              </option>
+            ))}
         </select>
         <div className="max-w-xl w-full">
           <div className="flex mt-10 items-center space-x-3">
@@ -184,13 +196,17 @@ const Home: NextPage = () => {
           <div className="text-left font-medium mb-2">Presets:</div>
           <div className="mb-5">
             <button
-              onClick={() => setQuestion("What are all the lists on this board?")}
+              onClick={() =>
+                setQuestion("What are all the lists on this board?")
+              }
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
               What are all the lists on this board?
             </button>
             <button
-              onClick={() => setQuestion("How many cards are in the To Do list?")}
+              onClick={() =>
+                setQuestion("How many cards are in the To Do list?")
+              }
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
               How many cards are in the "To Do" list?
@@ -199,7 +215,7 @@ const Home: NextPage = () => {
               onClick={() => setQuestion("What is the status of the project?")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
-             What is the status of the project?
+              What is the status of the project?
             </button>
             <button
               onClick={() => setQuestion("Are there any overdue tasks?")}
@@ -208,7 +224,9 @@ const Home: NextPage = () => {
               Are there any overdue tasks?
             </button>
             <button
-              onClick={() => setQuestion("Show me all the cards with the 'bug' label.")}
+              onClick={() =>
+                setQuestion("Show me all the cards with the 'bug' label.")
+              }
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
               Show me all the cards with the 'bug' label.
@@ -252,9 +270,7 @@ const Home: NextPage = () => {
               </h2>
             </div>
             <div className="space-y-8 flex flex-col items-center justify-center max-w-xl mx-auto">
-              <div
-                className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-100 transition cursor-copy border"
-              >
+              <div className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-100 transition cursor-copy border">
                 <ReactMarkdown>{generatedBios}</ReactMarkdown>
               </div>
             </div>

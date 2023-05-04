@@ -1,3 +1,4 @@
+import Cookies from 'js-cookie';
 import React, { useState, useEffect } from 'react';
 
 const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void; setSelectedBoardId: (id: string) => void }> = ({ setShowWelcome, setSelectedBoardId }) => {
@@ -5,9 +6,8 @@ const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void; setSele
   const [boards, setBoards] = useState([]);
 
   const handleClose = () => {
-    localStorage.setItem('trello_auth_redirect', 'true');
     setShowWelcome(false);
-    window.location.href = 'https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&key=2763e28ba1be71c85d97cf5206872560&return_url=http://localhost:3000';
+    window.location.href = `https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&key=${process.env.NEXT_PUBLIC_TRELLO_API_KEY}&return_url=${process.env.NEXT_PUBLIC_APP_URL}/handle-trello-token`;
   };
 
   const handleCloseButton = () => {
@@ -15,7 +15,7 @@ const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void; setSele
   };
 
   const handleOpenModal = async () => {
-    const accessToken = localStorage.getItem('trello_access_token');
+    const accessToken = Cookies.get('auth-token');
 
     if (!accessToken) {
       console.error('Access token not found');
@@ -29,15 +29,6 @@ const WelcomeScreen: React.FC<{ setShowWelcome: (show: boolean) => void; setSele
     const data = await response.json();
     setBoards(data);
   };
-
-  useEffect(() => {
-    const trelloAuthRedirect = localStorage.getItem('trello_auth_redirect');
-
-    if (trelloAuthRedirect === 'true') {
-      localStorage.removeItem('trello_auth_redirect');
-      handleOpenModal();
-    }
-  }, []);
 
   const fetchBoardData = async (boardId: string) => {
     try {

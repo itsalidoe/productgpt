@@ -1,58 +1,50 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/router';
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/router";
+import Cookies from "js-cookie";
 
 interface HeaderProps {
-  onLogout?: () => void;
-  fetchBoards: (organizationId: string) => void;
+  handleLogout: () => void;
+  setOrganizationId: (organizationId: string) => void;
 }
 
-
-export default function Header({ onLogout, fetchBoards }: HeaderProps) {
+export default function Header({ handleLogout, setOrganizationId }: HeaderProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [workspaces, setWorkspaces] = useState([]);
-  const [selectedWorkspace, setSelectedWorkspace] = useState(null);
+  const [selectedWorkspace, setSelectedWorkspace] = useState<{name: string, id: string} | null>(null);
   const router = useRouter();
-
-  const handleLogout = () => {
-    document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    if (onLogout) {
-      onLogout();
-    }
-    router.push('/');
-  };
 
   const handleSwitchWorkspace = async () => {
     // Fetch available workspaces (organizations) here
-    const response = await fetch('/api/trello/organizations');
+    const response = await fetch("/api/trello/organizations");
     const data = await response.json();
 
     if (response.ok) {
-      console.log('Workspaces:', data.result);
+      console.log("Workspaces:", data.result);
       setWorkspaces(data.result); // Store the fetched workspaces in the state
     } else {
-      console.error('Error fetching workspaces:', data.message);
+      console.error("Error fetching workspaces:", data.message);
     }
   };
 
-  const selectWorkspace = (workspace) => {
+  const selectWorkspace = (workspace: {name: string, id: string}) => {
     setSelectedWorkspace(workspace);
-    console.log('Selected workspace:', workspace);
-    fetchBoards(workspace.id); // Fetch boards for the selected workspace
+    console.log("Selected workspace:", workspace);
+    setOrganizationId(workspace.id); // Fetch boards for the selected workspace
 
     // Perform any additional actions needed when selecting a workspace
   };
 
   const fetchUserBoards = async () => {
-    const response = await fetch('/api/trello/user/boards');
+    const response = await fetch("/api/trello/boards");
     const data = await response.json();
-  
+
     if (response.ok) {
-      console.log('User Boards:', data.result);
+      console.log("User Boards:", data.result);
       // Store the fetched user boards in the state or perform any additional actions needed
     } else {
-      console.error('Error fetching user boards:', data.message);
+      console.error("Error fetching user boards:", data.message);
     }
   };
 
@@ -75,24 +67,40 @@ export default function Header({ onLogout, fetchBoards }: HeaderProps) {
         </Link>
       </div>
       <div className="relative ml-auto">
-        <button onClick={() => setShowDropdown(!showDropdown)} className="bg-gray-200 text-black px-3 py-1 rounded-lg font-semibold text-lg focus:outline-none hover:bg-opacity-80 transition-opacity">
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="bg-gray-200 text-black px-3 py-1 rounded-lg font-semibold text-lg focus:outline-none hover:bg-opacity-80 transition-opacity"
+        >
           Settings
         </button>
         {showDropdown && (
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-            <button onClick={handleSwitchWorkspace} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <button
+              onClick={handleSwitchWorkspace}
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
               Switch Workspaces
             </button>
-            {workspaces.map((workspace, index) => (
-              <button key={index} onClick={() => selectWorkspace(workspace)} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            {workspaces.map((workspace: { name: string; id: string }, index) => (
+              <button
+                key={"indexTrelloWorkspace" + index}
+                onClick={() => workspace && selectWorkspace(workspace)}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
                 {workspace.name}
               </button>
             ))}
-            <button onClick={fetchUserBoards} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-  Show All Boards
-</button>
+            <button
+              onClick={fetchUserBoards}
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              Show All Boards
+            </button>
 
-            <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <button
+              onClick={handleLogout}
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
               Logout
             </button>
           </div>

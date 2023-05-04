@@ -76,38 +76,38 @@ const Home: NextPage = () => {
         }
       );
 
+      const preProcessedDataJSON = await preProcessedData.json()
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_question: question,
-          preprocessed_data: await preProcessedData.json(),
+          preprocessed_data: preProcessedDataJSON,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate answer");
-      }
-
-      if (!response.ok) {
         throw new Error(response.statusText);
       }
-
+  
+      // This data is a ReadableStream
       const data = response.body;
       if (!data) {
         return;
       }
-
+  
       const reader = data.getReader();
       const decoder = new TextDecoder();
       let done = false;
-
+  
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         const chunkValue = decoder.decode(value);
         setGeneratedBios((prev) => prev + chunkValue);
       }
+      scrollToBios();
+      setLoading(false);
     } catch (error) {
       toast.error(`Error generating answer: ${error}`);
     } finally {

@@ -13,7 +13,7 @@ export default function HandleTrelloToken() {
       // Set the token as a cookie
       Cookies.set("trello-token", token, {
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
       });
       window.history.replaceState(null, '', '/handle-trello-token');
       // Redirect to the desired page without the hash

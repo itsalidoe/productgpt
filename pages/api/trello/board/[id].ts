@@ -30,11 +30,18 @@ export default async function GetTrelloBoard(
       `https://api.trello.com/1/boards/${id}/cards?key=${process.env.NEXT_PUBLIC_TRELLO_API_KEY}&token=${accessToken}`
     );
 
+    const boardMembers = await fetch(
+      `https://api.trello.com/1/boards/${id}/members?key=${process.env.NEXT_PUBLIC_TRELLO_API_KEY}&token=${accessToken}`
+    );
+
     const cards = await boardCards.json()
     const lists = await boardLists.json()
+    const members = await boardMembers.json()
     const cardsWithListName = cards.map((card: any) => {
       const list = lists.find((list: any) => list.id === card.idList);
-      return { name: card.name, due: card.due, listName: list.name, url: card.url, listId: card.idList, description: card.desc, dateLastActivity: card.dateLastActivity, dueReminder: card.dueReminder, id: card.id };
+      // find if card idMembers has id that matches a member object inside the boardMembers array
+      const cardMembers = members.filter((member: any) => card.idMembers.includes(member.id))
+      return { name: card.name, members: cardMembers, due: card.due, listName: list.name, url: card.url, listId: card.idList, description: card.desc, dateLastActivity: card.dateLastActivity, dueReminder: card.dueReminder, id: card.id };
     });
 
 

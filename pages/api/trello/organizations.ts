@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-if (!process.env.TRELLO_API_KEY && !process.env.TRELLO_API_TOKEN) {
+if (!process.env.NEXT_PUBLIC_TRELLO_API_KEY) {
   throw new Error("Missing env var from Trello");
 }
 

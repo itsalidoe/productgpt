@@ -9,25 +9,25 @@ if (!process.env.OPENAI_API_KEY) {
 }
 
 const createPrompt = (user_question: string, preprocessed_data: string): string => {
-  return `User question: ${user_question}\nPreprocessed Trello data:\n${preprocessed_data}\nPlease provide the answer in Markdown format.\nAnswer: `;
+  return `User question: ${user_question}\nPreprocessed Trello data:\n${JSON.stringify(preprocessed_data)}\nPlease provide the answer in Markdown format.\nAnswer: `;
 };
 
 const handler = async (req: Request): Promise<Response> => {
 
   const { user_question, preprocessed_data }= await req.json() as any;
-
+  
   if (!user_question) {
     return new Response("No prompt in the request", { status: 400 });
   }
-
+  console.log(createPrompt(user_question, preprocessed_data))
   const payload: OpenAIStreamPayload = {
-    model: "gpt-3.5-turbo",
+    model: "gpt-4",
     messages: [{ role: "user", content: createPrompt(user_question, preprocessed_data) }],
-    temperature: 0.7,
+    temperature: 0.1,
     top_p: 1,
     frequency_penalty: 0,
     presence_penalty: 0,
-    max_tokens: 200,
+    max_tokens: 4096,
     stream: true,
     n: 1,
   };

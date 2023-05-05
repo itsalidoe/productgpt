@@ -36,7 +36,9 @@ const Home: NextPage = () => {
     isLoading,
   } = useSWR(
     Cookies.get("trello-token")
-      ? `/api/trello/boards?organizationId=${organizationId}`
+      ? !organizationId
+        ? `/api/trello/boards`
+        : `/api/trello/boards?organizationId=${organizationId}`
       : null,
     trelloFetcher
   );
@@ -79,7 +81,7 @@ const Home: NextPage = () => {
       const body = JSON.stringify({
         user_question: question,
         preprocessed_data: preProcessedDataJSON,
-      })
+      });
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,7 +145,7 @@ const Home: NextPage = () => {
         <select
           value={selectedBoardId}
           onChange={(e) => setSelectedBoardId(e.target.value)}
-          className="w-full mt-4 mb-8 bg-white border border-black rounded-md text-black font-medium px-4 py-2"
+          className="max-w-xl w-full mt-4 mb-8 rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black my-5"
         >
           <option value="" disabled>
             Select a Trello board
@@ -161,11 +163,27 @@ const Home: NextPage = () => {
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black my-5"
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black my-3"
               placeholder="Enter your question here"
             />
           </div>
-          <div className="text-left font-medium mb-2">Presets:</div>
+          {!loading && (
+            <button
+              className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
+              onClick={(e) => submitQuestion(e)}
+            >
+              Submit Question &rarr;
+            </button>
+          )}
+          {loading && (
+            <button
+              className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
+              disabled
+            >
+              <LoadingDots color="white" style="large" />
+            </button>
+          )}
+          <div className="text-left font-medium mt-8 mb-2">Presets:</div>
           <div className="mb-5">
             <button
               onClick={() =>
@@ -203,24 +221,17 @@ const Home: NextPage = () => {
             >
               Show me all the cards with the 'bug' label.
             </button>
+            <button
+              onClick={() =>
+                setQuestion("Is anyone over capacity on this board?")
+              }
+              className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
+            >
+              Is anyone over capacity on this board?
+            </button>
             {/* Add more preset question buttons as needed */}
           </div>
-          {!loading && (
-            <button
-              className="bg-black rounded-xl text-white font-medium px-4 py-2 sm:mt-10 mt-8 hover:bg-black/80 w-full"
-              onClick={(e) => submitQuestion(e)}
-            >
-              Submit Question &rarr;
-            </button>
-          )}
-          {loading && (
-            <button
-              className="bg-black rounded-xl text-white font-medium px-4 py-2 sm:mt-10 mt-8 hover:bg-black/80 w-full"
-              disabled
-            >
-              <LoadingDots color="white" style="large" />
-            </button>
-          )}
+          
         </div>
       </main>
 

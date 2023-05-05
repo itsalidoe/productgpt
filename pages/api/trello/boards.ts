@@ -25,11 +25,14 @@ export default async function GetTrelloBoards(
       `https://api.trello.com/1/members/me/boards?key=${process.env.NEXT_PUBLIC_TRELLO_API_KEY}&token=${accessToken}`
     );
     let boards: any = await response.json();
-boards = boards
-  .filter((board: any) => board.idOrganization === organizationId)
-  .map((board: any) => {
-    return { id: board.id, nodeId: board.nodeId, name: board.name, url: board.url };
-  });
+    if (organizationId) {
+
+      boards = boards
+        .filter((board: any) => board.idOrganization === organizationId)
+        .map((board: any) => {
+          return { id: board.id, nodeId: board.nodeId, name: board.name, url: board.url };
+        });
+    }
     return res.status(200).json({ result: boards });
   } catch (error) {
     return res.status(500).json({ message: "Something went wrong on the API!", error: error });

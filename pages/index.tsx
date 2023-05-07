@@ -53,6 +53,66 @@ const Home: NextPage = () => {
     }
   };
 
+  const submitSummarizeToEmail = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    setGeneratedBios("");
+
+    try {
+      if (!Cookies.get("trello-token")) {
+        throw new Error("Not authenticated");
+      }
+
+      const preProcessedData = await fetch(
+        `/api/trello/board/${selectedBoardId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Cookies.get("trello-token")}`,
+          },
+        }
+      );
+      const preProcessedDataJSON = await preProcessedData.json();
+      const body = JSON.stringify({
+        preprocessed_data: preProcessedDataJSON,
+      });
+      const response = await fetch("/api/generate-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body,
+      });
+
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+
+      // This data is a ReadableStream
+      const data = response.body;
+      if (!data) {
+        return;
+      }
+
+      const reader = data.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value);
+        setGeneratedBios((prev) => prev + chunkValue);
+      }
+      scrollToBios();
+      setLoading(false);
+    } catch (error) {
+      toast.error(`Error generating answer: ${error}`);
+    } finally {
+      setLoading(false);
+      scrollToBios();
+    }
+  };
+
   const submitQuestion = async (e: any) => {
     e.preventDefault();
     setLoading(true);
@@ -158,7 +218,7 @@ const Home: NextPage = () => {
             ))}
         </select>
         <div className="max-w-xl w-full">
-          <div className="flex mt-10 items-center space-x-3">
+          <div className="flex mt-10 items-center space-x-3 ">
             <input
               type="text"
               value={question}
@@ -167,22 +227,41 @@ const Home: NextPage = () => {
               placeholder="Enter your question here"
             />
           </div>
-          {!loading && (
-            <button
-              className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
-              onClick={(e) => submitQuestion(e)}
-            >
-              Submit Question &rarr;
-            </button>
-          )}
-          {loading && (
-            <button
-              className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
-              disabled
-            >
-              <LoadingDots color="white" style="large" />
-            </button>
-          )}
+          <div className="flex-row inline-flex items-center w-full justify-between ">
+            {!loading && (
+              <button
+                className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-1/3"
+                onClick={(e) => submitQuestion(e)}
+              >
+                Submit Question &rarr;
+              </button>
+            )}
+            {loading && (
+              <button
+                className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-1/3"
+                disabled
+              >
+                <LoadingDots color="white" style="large" />
+              </button>
+            )}
+            <div className="font-semibold">Or</div>
+            {!loading && (
+              <button
+                className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-1/3"
+                onClick={(e) => submitSummarizeToEmail(e)}
+              >
+                Summarize to email
+              </button>
+            )}
+            {loading && (
+              <button
+                className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-1/3"
+                disabled
+              >
+                <LoadingDots color="white" style="large" />
+              </button>
+            )}
+          </div>
           <div className="text-left font-medium mt-8 mb-2">Presets:</div>
           <div className="mb-5">
             <button
@@ -231,7 +310,6 @@ const Home: NextPage = () => {
             </button>
             {/* Add more preset question buttons as needed */}
           </div>
-          
         </div>
       </main>
 

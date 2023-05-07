@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+const max_description_length = 240; //Length in characters.
+
 if (!process.env.NEXT_PUBLIC_TRELLO_API_KEY) {
   throw new Error("Missing env var from Trello");
 }
@@ -41,7 +43,7 @@ export default async function GetTrelloBoard(
       const list = lists.find((list: any) => list.id === card.idList);
       // find if card idMembers has id that matches a member object inside the boardMembers array
       const cardMembers = members.filter((member: any) => card.idMembers.includes(member.id))
-      return { name: card.name, members: cardMembers, due: card.due, listName: list.name, url: card.url, listId: card.idList, description: card.desc, dateLastActivity: card.dateLastActivity, dueReminder: card.dueReminder, id: card.id };
+      return { name: card.name, members: cardMembers, due: card.due, listName: list.name, url: card.url, listId: card.idList, description: card.desc.length > max_description_length ? card.desc.substring(0, 240) + "... (may be truncaded" : card.desc, dateLastActivity: card.dateLastActivity, dueReminder: card.dueReminder, id: card.id };
     });
 
 

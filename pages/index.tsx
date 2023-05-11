@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import { useRef, useState, useEffect, useContext } from "react";
+import { useRef, useState, useEffect, useContext, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { Toaster, toast } from "react-hot-toast";
 import Cookies from "js-cookie";
@@ -14,6 +14,8 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import LoadingDots from "../components/LoadingDots";
 import WelcomeScreen from "../components/WelcomeScreen";
+import validateTokenLimit from "../utils/validateTokenLimit";
+import useDebounce from "../utils/hooks/useDebounce";
 
 const Home: NextPage = () => {
   const { modalContext, setModalContext } = useContext(
@@ -24,6 +26,16 @@ const Home: NextPage = () => {
   const [generatedBios, setGeneratedBios] = useState("");
   const [selectedBoardId, setSelectedBoardId] = useState("");
   const [organizationId, setOrganizationId] = useState("");
+  const [preProcessedBoard, setPreProcessedBoard] = useState("" as any);
+  const debouncedValue = useDebounce<string>(question, 400);
+
+  const isInputValid = useMemo(() => {
+    return validateTokenLimit(
+      question +
+        preProcessedBoard +
+        " blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah"
+    ).valid;
+  }, [debouncedValue, preProcessedBoard]);
 
   const handleLogout = () => {
     setModalContext({ ...modalContext, welcome: true });
@@ -42,7 +54,28 @@ const Home: NextPage = () => {
       : null,
     trelloFetcher
   );
-  if (fetchBoardsError)
+
+  const {
+    data: boardData,
+    error: fetchBoardError,
+    isLoading: isBoardLoading,
+  } = useSWR(
+    Cookies.get("trello-token")
+      ? selectedBoardId !== "" && `/api/trello/board/${selectedBoardId}`
+      : null,
+    trelloFetcher,
+    {
+      onSuccess: async (data) => {
+        console.log("data", data);
+        const body = JSON.stringify({
+          preprocessed_data: data,
+        });
+        setPreProcessedBoard(body);
+      },
+    }
+  );
+
+  if (fetchBoardsError || fetchBoardError)
     toast.error(`Error fetching boards: ${fetchBoardsError}`);
 
   const bioRef = useRef<null | HTMLDivElement>(null);
@@ -52,6 +85,8 @@ const Home: NextPage = () => {
       bioRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  useEffect(() => {}, [selectedBoardId]);
 
   const submitSummarizeToEmail = async (e: any) => {
     e.preventDefault();
@@ -63,24 +98,10 @@ const Home: NextPage = () => {
         throw new Error("Not authenticated");
       }
 
-      const preProcessedData = await fetch(
-        `/api/trello/board/${selectedBoardId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${Cookies.get("trello-token")}`,
-          },
-        }
-      );
-      const preProcessedDataJSON = await preProcessedData.json();
-      const body = JSON.stringify({
-        preprocessed_data: preProcessedDataJSON,
-      });
       const response = await fetch("/api/generate-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: body,
+        body: preProcessedBoard,
       });
 
       if (!response.ok) {
@@ -127,21 +148,12 @@ const Home: NextPage = () => {
         throw new Error("Not authenticated");
       }
 
-      const preProcessedData = await fetch(
-        `/api/trello/board/${selectedBoardId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${Cookies.get("trello-token")}`,
-          },
-        }
-      );
-      const preProcessedDataJSON = await preProcessedData.json();
+      const preProcessedDataJSON = await preProcessedBoard.json();
       const body = JSON.stringify({
         user_question: question,
         preprocessed_data: preProcessedDataJSON,
       });
+
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -218,20 +230,31 @@ const Home: NextPage = () => {
             ))}
         </select>
         <div className="max-w-xl w-full">
-          <div className="flex mt-10 items-center space-x-3 ">
+          <div className="flex mt-10 flex-col items-center space-x-3 ">
             <input
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black my-3"
+              className={`w-full rounded-md ${
+                isInputValid ? "border-gray-300" : "border-red-300"
+              }  shadow-sm focus:border-black focus:ring-black mt-3`}
               placeholder="Enter your question here"
             />
+
+            <div className="text-red-500 self-end">
+              {!isInputValid ? (
+                "Board and input are too large to process, please upgrade."
+              ) : (
+                <>&nbsp;</>
+              )}
+            </div>
           </div>
           <div className="flex-row inline-flex items-center w-full justify-between ">
             {!loading && (
               <button
                 className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-1/3"
                 onClick={(e) => submitQuestion(e)}
+                disabled={!isInputValid}
               >
                 Submit Question &rarr;
               </button>
@@ -249,6 +272,7 @@ const Home: NextPage = () => {
               <button
                 className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-1/3"
                 onClick={(e) => submitSummarizeToEmail(e)}
+                disabled={!isInputValid}
               >
                 Summarize to email
               </button>

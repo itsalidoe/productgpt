@@ -1,25 +1,20 @@
 import GPT3NodeTokenizer from "gpt3-tokenizer";
 import { OpenAIStream, OpenAIStreamPayload } from "../../utils/OpenAIStream";
+import validateTokenLimit from "../../utils/validateTokenLimit";
 
 export const config = {
   runtime: "edge",
 };
 
-const max_tokens = 6000;
-
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("Missing env var from OpenAI");
 }
-console.log(process.env.OPENAI_API_KEY);
 
 const createPrompt = (preprocessed_data: string): string => {
   const prompt = `Summarize this Trello board as a overall project summary for an email. Include info a CEO would want to know about a project and a timeline/delivery date. Be direct like you're talking to a CEO.  Project data:\n${JSON.stringify(
     preprocessed_data
   )}\n Answer: `;
-  const tokenizer = new GPT3NodeTokenizer({ type: "gpt3" });
-  const encoded: { bpe: number[]; text: string[] } = tokenizer.encode(prompt);
-  console.log("TOKENS", encoded.text.length);
-  if (encoded.text.length > max_tokens) {
+  if (!validateTokenLimit(prompt).valid) {
     throw new Error("Too many tokens");
   }
   return prompt;
@@ -37,7 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
     top_p: 1,
     frequency_penalty: 0,
     presence_penalty: 0,
-    max_tokens: max_tokens,
+    max_tokens: process.env.NEXT_PUBLIC_OPENAI_MAX_TOKENS ? parseInt(process.env.NEXT_PUBLIC_OPENAI_MAX_TOKENS) : 2048,
     stream: true,
     n: 1,
   };

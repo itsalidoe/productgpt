@@ -84,7 +84,7 @@ export default function Header({
       <div className="relative ml-auto">
         <button
           onClick={() => setShowDropdown(!showDropdown)}
-          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           className="bg-gray-200 text-black px-3 py-1 rounded-lg font-semibold text-lg focus:outline-none hover:bg-opacity-80 transition-opacity"
         >
           Settings

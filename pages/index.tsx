@@ -1,15 +1,13 @@
-import type { NextPage } from "next";
+import type { NextPage } from "next"; 
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { useRef, useState, useEffect, useContext, useMemo } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown from "react-markdown"; 
 import { Toaster, toast } from "react-hot-toast";
 import Cookies from "js-cookie";
 import useSWR from "swr";
-
 import { IModalContext, ModalContext } from "../context/ModalContext";
 import trelloFetcher from "../utils/fetchers/Trello";
-
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import LoadingDots from "../components/LoadingDots";
@@ -18,35 +16,27 @@ import validateTokenLimit from "../utils/validateTokenLimit";
 import useDebounce from "../utils/hooks/useDebounce";
 
 const Home: NextPage = () => {
-  const { modalContext, setModalContext } = useContext(
-    ModalContext
-  ) as IModalContext;
+  const { modalContext, setModalContext } = useContext(ModalContext) as IModalContext;
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState("");
   const [generatedBios, setGeneratedBios] = useState("");
   const [selectedBoardId, setSelectedBoardId] = useState("");
   const [organizationId, setOrganizationId] = useState("");
   const [preProcessedBoard, setPreProcessedBoard] = useState("" as any);
+  
   const debouncedValue = useDebounce<string>(question, 400);
-
   const isInputValid = useMemo(() => {
     return validateTokenLimit(
-      question +
-        preProcessedBoard +
-        " blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah"
+      question + preProcessedBoard +  " blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah"
     ).valid;
   }, [debouncedValue, preProcessedBoard]);
-
+  
   const handleLogout = () => {
     setModalContext({ ...modalContext, welcome: true });
     Cookies.remove("trello-token");
   };
-
-  const {
-    data,
-    error: fetchBoardsError,
-    isLoading,
-  } = useSWR(
+  
+  const { data, error: fetchBoardsError, isLoading } = useSWR(
     Cookies.get("trello-token")
       ? !organizationId
         ? `/api/trello/boards`
@@ -54,70 +44,55 @@ const Home: NextPage = () => {
       : null,
     trelloFetcher
   );
-
-  const {
-    data: boardData,
-    error: fetchBoardError,
-    isLoading: isBoardLoading,
-  } = useSWR(
-    Cookies.get("trello-token")
-      ? selectedBoardId !== "" && `/api/trello/board/${selectedBoardId}`
-      : null,
-    trelloFetcher,
-    {
+  
+  const { data: boardData, error: fetchBoardError, isLoading: isBoardLoading } = 
+    useSWR(Cookies.get("trello-token") ? selectedBoardId !== "" && `/api/trello/board/${selectedBoardId}` : null, 
+    trelloFetcher, {
       onSuccess: async (data) => {
         console.log("data", data);
-        const body = JSON.stringify({
-          preprocessed_data: data,
-        });
+        const body = JSON.stringify({ preprocessed_data: data, });
         setPreProcessedBoard(body);
       },
-    }
+    } 
   );
-
-  if (fetchBoardsError || fetchBoardError)
+  
+  if (fetchBoardsError || fetchBoardError) 
     toast.error(`Error fetching boards: ${fetchBoardsError}`);
-
+  
   const bioRef = useRef<null | HTMLDivElement>(null);
-
   const scrollToBios = () => {
     if (bioRef.current !== null) {
       bioRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
-
+  
   useEffect(() => {}, [selectedBoardId]);
-
+  
   const submitSummarizeToEmail = async (e: any) => {
     e.preventDefault();
     setLoading(true);
     setGeneratedBios("");
-
     try {
       if (!Cookies.get("trello-token")) {
         throw new Error("Not authenticated");
       }
-
+      const preProcessedData = JSON.parse(preProcessedBoard);
       const response = await fetch("/api/generate-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: preProcessedBoard,
+        body: preProcessedData,
       });
-
       if (!response.ok) {
         throw new Error(response.statusText);
       }
-
       // This data is a ReadableStream
       const data = response.body;
       if (!data) {
         return;
       }
-
       const reader = data.getReader();
       const decoder = new TextDecoder();
       let done = false;
-
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
@@ -133,47 +108,39 @@ const Home: NextPage = () => {
       scrollToBios();
     }
   };
-
+  
   const submitQuestion = async (e: any) => {
     e.preventDefault();
     setLoading(true);
     setGeneratedBios("");
-
     try {
       if (question === "") {
         throw new Error("Question cannot be empty");
       }
-
       if (!Cookies.get("trello-token")) {
         throw new Error("Not authenticated");
       }
-
-      const preProcessedDataJSON = await preProcessedBoard.json();
+      const preProcessedData = JSON.parse(preProcessedBoard);
       const body = JSON.stringify({
         user_question: question,
-        preprocessed_data: preProcessedDataJSON,
+        preprocessed_data: preProcessedData,
       });
-
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: body,
       });
-
       if (!response.ok) {
         throw new Error(response.statusText);
       }
-
       // This data is a ReadableStream
       const data = response.body;
       if (!data) {
         return;
       }
-
       const reader = data.getReader();
       const decoder = new TextDecoder();
       let done = false;
-
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
@@ -181,7 +148,7 @@ const Home: NextPage = () => {
         setGeneratedBios((prev) => prev + chunkValue);
       }
       scrollToBios();
-      setLoading(false);
+      setLoading(false); 
     } catch (error) {
       toast.error(`Error generating answer: ${error}`);
     } finally {
@@ -189,14 +156,13 @@ const Home: NextPage = () => {
       scrollToBios();
     }
   };
-
+  
   return (
     <div className="flex max-w-5xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
       <Head>
         <title>Talk to Trello</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
       {modalContext.welcome && (
         <WelcomeScreen
           setShowWelcome={() =>
@@ -205,11 +171,7 @@ const Home: NextPage = () => {
           setSelectedBoardId={setSelectedBoardId}
         />
       )}
-
-      <Header
-        handleLogout={handleLogout}
-        setOrganizationId={setOrganizationId}
-      />
+      <Header handleLogout={handleLogout} setOrganizationId={setOrganizationId} />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20">
         <h1 className="sm:text-6xl text-4xl max-w-[708px] font-bold text-slate-900">
           Talk to your Trello Board
@@ -237,10 +199,9 @@ const Home: NextPage = () => {
               onChange={(e) => setQuestion(e.target.value)}
               className={`w-full rounded-md ${
                 isInputValid ? "border-gray-300" : "border-red-300"
-              }  shadow-sm focus:border-black focus:ring-black mt-3`}
+              } shadow-sm focus:border-black focus:ring-black mt-3`}
               placeholder="Enter your question here"
             />
-
             <div className="text-red-500 self-end">
               {!isInputValid ? (
                 "Board and input are too large to process, please upgrade."
@@ -257,7 +218,7 @@ const Home: NextPage = () => {
                 disabled={!isInputValid}
               >
                 Submit Question &rarr;
-              </button>
+                </button> 
             )}
             {loading && (
               <button
@@ -274,7 +235,7 @@ const Home: NextPage = () => {
                 onClick={(e) => submitSummarizeToEmail(e)}
                 disabled={!isInputValid}
               >
-                Summarize to email
+                Summarize to email 
               </button>
             )}
             {loading && (
@@ -289,19 +250,15 @@ const Home: NextPage = () => {
           <div className="text-left font-medium mt-8 mb-2">Presets:</div>
           <div className="mb-5">
             <button
-              onClick={() =>
-                setQuestion("What are all the lists on this board?")
-              }
+              onClick={() => setQuestion("What are all the lists on this board?")} 
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
             >
               What are all the lists on this board?
             </button>
             <button
-              onClick={() =>
-                setQuestion("How many cards are in the To Do list?")
-              }
+              onClick={() => setQuestion("How many cards are in the To Do list?")}
               className="bg-white border border-black rounded-xl text-black font-medium px-4 py-2 hover:bg-gray-200 w-full mb-2"
-            >
+            > 
               How many cards are in the "To Do" list?
             </button>
             <button
@@ -336,7 +293,6 @@ const Home: NextPage = () => {
           </div>
         </div>
       </main>
-
       <Toaster
         position="top-center"
         reverseOrder={false}
@@ -366,5 +322,4 @@ const Home: NextPage = () => {
     </div>
   );
 };
-
 export default Home;

@@ -1,0 +1,4 @@
+{
+    "chatide.maxLength": 100000,
+    "chatide.model": "claude-v1.3-100k"
+}

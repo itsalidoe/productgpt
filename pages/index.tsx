@@ -147,8 +147,7 @@ const Home: NextPage = () => {
       if (!Cookies.get("trello-token")) {
         throw new Error("Not authenticated");
       }
-
-      const preProcessedDataJSON = await preProcessedBoard.json();
+      const preProcessedDataJSON = preProcessedBoard;
       const body = JSON.stringify({
         user_question: question,
         preprocessed_data: preProcessedDataJSON,
@@ -178,7 +177,7 @@ const Home: NextPage = () => {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         const chunkValue = decoder.decode(value);
-        setGeneratedBios((prev) => prev + chunkValue);
+        setGeneratedBios((prev) => !done ? chunkValue : prev);
       }
       scrollToBios();
       setLoading(false);

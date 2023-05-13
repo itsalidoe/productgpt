@@ -1,24 +1,24 @@
-import { OpenAIStream, OpenAIStreamPayload } from "../../utils/OpenAIStream";
+import { ClaudeStream, ClaudeStreamPayload } from "../../utils/ClaudeStream";
 import validateTokenLimit from "../../utils/validateTokenLimit";
 
 export const config = {
   runtime: "edge",
 };
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("Missing env var from OpenAI");
+if (!process.env.ANTHROPIC_API_KEY) {
+  throw new Error("Missing env var from Anthropic");
 }
 
 const createPrompt = (
   user_question: string,
   preprocessed_data: string
 ): string => {
-  const prompt = `User question: ${user_question}\nPreprocessed Trello data:\n${JSON.stringify(
+  const prompt = `\n\nHuman: ${user_question}\nPreprocessed Trello data: ${JSON.stringify(
     preprocessed_data
-  )}\nPlease provide the answer in Markdown format.\nAnswer: `;
-  if (!validateTokenLimit(prompt).valid) {
-    throw new Error("Too many tokens");
-  }
+  )}\n\nPlease provide the answer in Markdown format.\n\nAssistant: `;
+  // if (!validateTokenLimit(prompt).valid) {
+  //   throw new Error("Too many tokens");
+  // }
   return prompt;
 };
 
@@ -28,24 +28,17 @@ const handler = async (req: Request): Promise<Response> => {
   if (!user_question) {
     return new Response("No prompt in the request", { status: 400 });
   }
-  console.log(createPrompt(user_question, preprocessed_data));
-  const payload: OpenAIStreamPayload = {
-    model: "gpt-4",
-    messages: [
-      { role: "user", content: createPrompt(user_question, preprocessed_data) },
-    ],
+
+  const payload: ClaudeStreamPayload = {
+    model: "claude-v1", //claude-v1.3-100k
+    prompt: createPrompt(user_question, preprocessed_data),
+    max_tokens_to_sample: 3000,
     temperature: 0.1,
-    top_p: 1,
-    frequency_penalty: 0,
-    presence_penalty: 0,
-    max_tokens: process.env.NEXT_PUBLIC_OPENAI_MAX_TOKENS
-      ? parseInt(process.env.NEXT_PUBLIC_OPENAI_MAX_TOKENS)
-      : 2048,
+    stop_sequences: ["\n\nHuman:"],
     stream: true,
-    n: 1,
   };
 
-  const stream = await OpenAIStream(payload);
+  const stream = await ClaudeStream(payload);
   return new Response(stream);
 };
 
